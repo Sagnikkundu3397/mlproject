@@ -10,7 +10,13 @@ from dataclasses import dataclass
 
 from dataclasses import dataclass
 
+from src.components.data_transformation import DataTransformation
+from src.components.data_transformation import DataTransformationConfig
+from src.components.model_trainer import ModelTrainer
+from src.components.model_trainer import ModelTrainerConfig
+
 @dataclass
+
 class DataIngestionConfig:
     train_data_path: str = os.path.join('artifacts', 'train.csv')
     test_data_path: str  = os.path.join('artifacts', 'test.csv')
@@ -25,12 +31,13 @@ class DataIngestion:
         logging.info("Data Ingestion method starts")
         try:
             # Replace 'data/source_data.csv' with your actual data source path
-            df = pd.read_csv('notebook\data\stud.csv')  
+            df = pd.read_csv(os.path.join("notebook", "data", "stud.csv"))  
             logging.info("Dataset read as dataframe")
 
             os.makedirs(os.path.dirname(self.ingestion_config.train_data_path), exist_ok=True)
-            df.to_csv(self.ingestion_config.train_data_path, index=False)
-
+            df.to_csv(self.ingestion_config.raw_data_path, index=False)
+            logging.info("Raw data saved")
+            
             logging.info("train_test split startd")
             train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
             train_set.to_csv(self.ingestion_config.train_data_path, index=False)
@@ -48,4 +55,11 @@ class DataIngestion:
         
 if __name__ == "__main__":
     obj = DataIngestion()
-    obj.initiate_data_ingestion()
+    train_data, test_data =obj.initiate_data_ingestion()
+
+    data_transformation = DataTransformation()
+    
+    train_arr, test_arr ,_ =data_transformation.initiate_data_transformation(train_data,test_data)
+    modeltrainer=ModelTrainer()
+    result=(modeltrainer.initiate_model_trainer(train_arr,test_arr))
+    print(result)
